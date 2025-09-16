@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 
-	"github.com/simonswine/sonnenbatterie-exporter/api"
+	"github.com/joconcepts/sonnenbatterie-exporter/api"
 )
 
 const timeout = 15 * time.Second
