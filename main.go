@@ -38,6 +38,7 @@ type collector struct {
 	lastFullyCharged       *prometheus.Desc
 	fullChargeCapacity     *prometheus.Desc
 	remaningChargeCapacity *prometheus.Desc
+	pacTotal               *prometheus.Desc
 
 	batteryCycleCount             *prometheus.Desc
 	batteryMaximumCellTemperature *prometheus.Desc
@@ -124,6 +125,12 @@ func newCollector(api *api.Sonnenbatterie) *collector {
 		remaningChargeCapacity: prometheus.NewDesc(
 			"solar_battery_remaining_charge_capacity",
 			"Remaining charge capacity in watt hours",
+			nil,
+			nil,
+		),
+		pacTotal: prometheus.NewDesc(
+			"solar_battery_pac_total",
+			"Total AC power of battery, greaater zero is discharging, less than zero is charging",
 			nil,
 			nil,
 		),
@@ -262,6 +269,7 @@ func (c *collector) collectStatus(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.consumptionPower, prometheus.GaugeValue, float64(status.ConsumptionW), "")
 	ch <- prometheus.MustNewConstMetric(c.productionPower, prometheus.GaugeValue, float64(status.ProductionW), "")
 	ch <- prometheus.MustNewConstMetric(c.remaningChargeCapacity, prometheus.GaugeValue, float64(status.RemainingCapacityWh))
+	ch <- prometheus.MustNewConstMetric(c.pacTotal, prometheus.GaugeValue, float64(status.PacTotalW))
 }
 
 func (c *collector) collectPowerMeter(ch chan<- prometheus.Metric) {
