@@ -38,6 +38,24 @@ type collector struct {
 	lastFullyCharged       *prometheus.Desc
 	fullChargeCapacity     *prometheus.Desc
 	remaningChargeCapacity *prometheus.Desc
+
+	batteryCycleCount             *prometheus.Desc
+	batteryMaximumCellTemperature *prometheus.Desc
+	batteryMaximumCellVoltage     *prometheus.Desc
+	batteryMaximumModuleCurrent   *prometheus.Desc
+	batteryMaximumModuleDCVoltage *prometheus.Desc
+	batteryMinimumCellTemperature *prometheus.Desc
+	batteryMinimumCellVoltage     *prometheus.Desc
+	batteryMinimumModuleCurrent   *prometheus.Desc
+	batteryMinimumModuleDCVoltage *prometheus.Desc
+	batteryRelativeStateOfCharge  *prometheus.Desc
+	batteryRemainingCapacity      *prometheus.Desc
+	batterySystemAlarm            *prometheus.Desc
+	batterySystemCurrent          *prometheus.Desc
+	batterySystemVoltage          *prometheus.Desc
+	batterySystemDCVoltage        *prometheus.Desc
+	batterySystemStatus           *prometheus.Desc
+	batterySystemWarning          *prometheus.Desc
 }
 
 func newCollector(api *api.Sonnenbatterie) *collector {
@@ -106,6 +124,109 @@ func newCollector(api *api.Sonnenbatterie) *collector {
 		remaningChargeCapacity: prometheus.NewDesc(
 			"solar_battery_remaining_charge_capacity",
 			"Remaining charge capacity in watt hours",
+			nil,
+			nil,
+		),
+
+		batteryCycleCount: prometheus.NewDesc(
+			"solar_battery_cycle_count",
+			"Cycle count of battery module",
+			nil,
+			nil,
+		),
+		batteryMaximumCellTemperature: prometheus.NewDesc(
+			"solar_battery_maximum_cell_temperature",
+			"Maximum cell temperature of battery",
+			nil,
+			nil,
+		),
+		batteryMaximumCellVoltage: prometheus.NewDesc(
+			"solar_battery_maximum_cell_voltage",
+			"Maximum cell voltage of battery",
+			nil,
+			nil,
+		),
+		batteryMaximumModuleCurrent: prometheus.NewDesc(
+			"solar_battery_maximum_module_current",
+			"Maximum module current of battery",
+			nil,
+			nil,
+		),
+		batteryMaximumModuleDCVoltage: prometheus.NewDesc(
+			"solar_battery_maximum_module_dc_voltage",
+			"Maximum module DC voltage of battery",
+			nil,
+			nil,
+		),
+		batteryMinimumCellTemperature: prometheus.NewDesc(
+			"solar_battery_minimum_cell_temperature",
+			"Minimum cell temperature of battery",
+			nil,
+			nil,
+		),
+		batteryMinimumCellVoltage: prometheus.NewDesc(
+			"solar_battery_minimum_cell_voltage",
+			"Minimum cell voltage of battery",
+			nil,
+			nil,
+		),
+		batteryMinimumModuleCurrent: prometheus.NewDesc(
+			"solar_battery_minimum_module_current",
+			"Minimum module current of battery",
+			nil,
+			nil,
+		),
+		batteryMinimumModuleDCVoltage: prometheus.NewDesc(
+			"solar_battery_minimum_module_dc_voltage",
+			"Minimum module DC voltage of battery",
+			nil,
+			nil,
+		),
+		batteryRelativeStateOfCharge: prometheus.NewDesc(
+			"solar_battery_relative_state_of_charge",
+			"Relative state of charge of battery",
+			nil,
+			nil,
+		),
+		batteryRemainingCapacity: prometheus.NewDesc(
+			"solar_battery_remaining_capacity",
+			"Remaining capacity of battery",
+			nil,
+			nil,
+		),
+		batterySystemAlarm: prometheus.NewDesc(
+			"solar_battery_system_alarm",
+			"System alarm status of battery",
+			nil,
+			nil,
+		),
+		batterySystemCurrent: prometheus.NewDesc(
+			"solar_battery_system_current",
+			"System current of battery",
+			nil,
+			nil,
+		),
+		batterySystemVoltage: prometheus.NewDesc(
+			"solar_battery_system_voltage",
+			"System voltage of battery",
+			nil,
+			nil,
+		),
+		batterySystemDCVoltage: prometheus.NewDesc(
+			"solar_battery_system_dc_voltage",
+			"System DC voltage of battery",
+			nil,
+			nil,
+		),
+		batterySystemStatus: prometheus.NewDesc(
+			"solar_battery_system_status",
+			"System status of battery",
+			nil,
+			nil,
+		),
+		batterySystemWarning: prometheus.NewDesc(
+			"solar_battery_system_warning",
+			"System warning status of battery",
 			nil,
 			nil,
 		),
@@ -185,11 +306,41 @@ func (c *collector) collectLatestData(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.fullChargeCapacity, prometheus.GaugeValue, float64(latestData.FullChargeCapacity))
 }
 
+func (c *collector) collectBatteryModuleData(ch chan<- prometheus.Metric) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	battery_module, err := c.api.GetBatteryModuleData(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get status")
+		return
+	}
+
+	ch <- prometheus.MustNewConstMetric(c.batteryCycleCount, prometheus.GaugeValue, battery_module.CycleCount)
+	ch <- prometheus.MustNewConstMetric(c.batteryMaximumCellTemperature, prometheus.GaugeValue, battery_module.MaximumCellTemperature)
+	ch <- prometheus.MustNewConstMetric(c.batteryMaximumCellVoltage, prometheus.GaugeValue, battery_module.MaximumCellVoltage)
+	ch <- prometheus.MustNewConstMetric(c.batteryMaximumModuleCurrent, prometheus.GaugeValue, battery_module.MaximumModuleCurrent)
+	ch <- prometheus.MustNewConstMetric(c.batteryMaximumModuleDCVoltage, prometheus.GaugeValue, battery_module.MaximumModuleDCVoltage)
+	ch <- prometheus.MustNewConstMetric(c.batteryMinimumCellTemperature, prometheus.GaugeValue, battery_module.MinimumCellTemperature)
+	ch <- prometheus.MustNewConstMetric(c.batteryMinimumCellVoltage, prometheus.GaugeValue, battery_module.MinimumCellVoltage)
+	ch <- prometheus.MustNewConstMetric(c.batteryMinimumModuleCurrent, prometheus.GaugeValue, battery_module.MinimumModuleCurrent)
+	ch <- prometheus.MustNewConstMetric(c.batteryMinimumModuleDCVoltage, prometheus.GaugeValue, battery_module.MinimumModuleDCVoltage)
+	ch <- prometheus.MustNewConstMetric(c.batteryRelativeStateOfCharge, prometheus.GaugeValue, battery_module.RelativeStateOfCharge)
+	ch <- prometheus.MustNewConstMetric(c.batteryRemainingCapacity, prometheus.GaugeValue, battery_module.RemainingCapacity)
+	ch <- prometheus.MustNewConstMetric(c.batterySystemAlarm, prometheus.GaugeValue, battery_module.SystemAlarm)
+	ch <- prometheus.MustNewConstMetric(c.batterySystemCurrent, prometheus.GaugeValue, battery_module.SystemCurrent)
+	ch <- prometheus.MustNewConstMetric(c.batterySystemVoltage, prometheus.GaugeValue, battery_module.SystemVoltage)
+	ch <- prometheus.MustNewConstMetric(c.batterySystemDCVoltage, prometheus.GaugeValue, battery_module.SystemDCVoltage)
+	ch <- prometheus.MustNewConstMetric(c.batterySystemStatus, prometheus.GaugeValue, battery_module.SystemStatus)
+	ch <- prometheus.MustNewConstMetric(c.batterySystemWarning, prometheus.GaugeValue, battery_module.SystemWarning)
+}
+
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	c.collectStatus(ch)
 	if c.api.HasToken() {
 		c.collectPowerMeter(ch)
 		c.collectLatestData(ch)
+		c.collectBatteryModuleData(ch)
 	}
 }
 

@@ -237,3 +237,51 @@ func (f *Sonnenbatterie) GetLatestData(ctx context.Context) (*LatestData, error)
 
 	return &status, nil
 }
+
+type BatteryModuleData struct {
+	CycleCount             float64 `json:"cyclecount"`
+	FullChargeCapacity     float64 `json:"fullchargecapacity"`
+	MaximumCellTemperature float64 `json:"maximumcelltemperature"`
+	MaximumCellVoltage     float64 `json:"maximumcellvoltage"`
+	MaximumModuleCurrent   float64 `json:"maximummodulecurrent"`
+	MaximumModuleDCVoltage float64 `json:"maximummoduledcvoltage"`
+	MinimumCellTemperature float64 `json:"minimumcelltemperature"`
+	MinimumCellVoltage     float64 `json:"minimumcellvoltage"`
+	MinimumModuleCurrent   float64 `json:"minimummodulecurrent"`
+	MinimumModuleDCVoltage float64 `json:"minimummoduledcvoltage"`
+	RelativeStateOfCharge  float64 `json:"relativestateofcharge"`
+	RemainingCapacity      float64 `json:"remainingcapacity"`
+	SystemAlarm            float64 `json:"systemalarm"`
+	SystemCurrent          float64 `json:"systemcurrent"`
+	SystemVoltage          float64 `json:"systemvoltage"`
+	SystemDCVoltage        float64 `json:"systemdcvoltage"`
+	SystemStatus           float64 `json:"systemstatus"`
+	SystemWarning          float64 `json:"systemwarning"`
+}
+
+// Gets battery module data for this sonnenBatterie (Read API)
+func (f *Sonnenbatterie) GetBatteryModuleData(ctx context.Context) (*BatteryModuleData, error) {
+	u := f.baseURL
+	u.Path = filepath.Join(u.Path, "battery")
+	req, err := f.newRequest(ctx, "GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := f.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected http status: %s", resp.Status)
+	}
+	defer resp.Body.Close()
+
+	var battery_module BatteryModuleData
+	if err := json.NewDecoder(resp.Body).Decode(&battery_module); err != nil {
+		return nil, fmt.Errorf("error parsing battery module: %w", err)
+	}
+
+	return &battery_module, nil
+}
